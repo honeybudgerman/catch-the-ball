@@ -23,6 +23,8 @@ const ball = {
 };
 
 let score = 0;
+let lives = 3;
+let level = 1;
 
 function drawPlayer() {
     ctx.fillStyle = '#0095DD';
@@ -43,6 +45,18 @@ function drawScore() {
     ctx.fillText(`Score: ${score}`, 8, 20);
 }
 
+function drawLives() {
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#0095DD';
+    ctx.fillText(`Lives: ${lives}`, canvas.width - 75, 20);
+}
+
+function drawLevel() {
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#0095DD';
+    ctx.fillText(`Level: ${level}`, canvas.width / 2 - 30, 20);
+}
+
 function movePlayer() {
     player.x += player.dx;
 
@@ -59,20 +73,45 @@ function moveBall() {
     ball.x += ball.dx;
     ball.y += ball.dy;
 
+    // Проверка столкновения с боковыми стенами
     if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
         ball.dx *= -1;
     }
 
+    // Проверка столкновения с верхней стеной
     if (ball.y - ball.radius < 0) {
         ball.dy *= -1;
     }
 
+    // Проверка столкновения с игроком
+    if (ball.y + ball.radius > player.y &&
+        ball.y - ball.radius < player.y + player.height &&
+        ball.x + ball.radius > player.x &&
+        ball.x - ball.radius < player.x + player.width) {
+
+        ball.dy *= -1;
+        ball.y = player.y - ball.radius; // Установите шарик над игроком
+        score++;
+        if (score % 5 === 0) {
+            level++;
+            ball.speed += 1;
+            ball.dx = ball.speed * (ball.dx > 0 ? 1 : -1);
+            ball.dy = ball.speed * (ball.dy > 0 ? 1 : -1);
+        }
+    }
+
+    // Проверка выхода за нижнюю границу
     if (ball.y + ball.radius > canvas.height) {
-        if (ball.x > player.x && ball.x < player.x + player.width) {
-            ball.dy *= -1;
-            score++;
-        } else {
+        lives--;
+        if (lives === 0) {
+            alert('Game Over');
             document.location.reload();
+        } else {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = ball.speed * (Math.random() > 0.5 ? 1 : -1);
+            ball.dy = -ball.speed;
+            player.x = canvas.width / 2 - player.width / 2;
         }
     }
 }
@@ -86,6 +125,8 @@ function update() {
     drawPlayer();
     drawBall();
     drawScore();
+    drawLives();
+    drawLevel();
 
     requestAnimationFrame(update);
 }
