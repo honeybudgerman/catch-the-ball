@@ -150,7 +150,22 @@ function keyUp(e) {
     }
 }
 
+function touchStart(e) {
+    const touchX = e.touches[0].clientX;
+    if (touchX > canvas.width / 2) {
+        player.dx = player.speed;
+    } else {
+        player.dx = -player.speed;
+    }
+}
+
+function touchEnd() {
+    player.dx = 0;
+}
+
 document.addEventListener('keydown', keyDown);
 document.addEventListener('keyup', keyUp);
+document.addEventListener('touchstart', touchStart);
+document.addEventListener('touchend', touchEnd);
 
 update();
