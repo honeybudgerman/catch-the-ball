@@ -22,21 +22,77 @@ const ball = {
     dy: -4
 };
 
+let balls = [Object.assign({}, ball)];
 let score = 0;
 let lives = 3;
 let level = 1;
+const blockRowCount = 5;
+const blockColumnCount = 10;
+const blockWidth = 75;
+const blockHeight = 20;
+const blockPadding = 10;
+const blockOffsetTop = 30;
+const blockOffsetLeft = 30;
+const blocks = [];
+const blackBlocks = [];
+
+for (let c = 0; c < blockColumnCount; c++) {
+    blocks[c] = [];
+    for (let r = 0; r < blockRowCount; r++) {
+        blocks[c][r] = { x: 0, y: 0, status: 1, color: getRandomColor() };
+    }
+}
+
+for (let i = 0; i < 5; i++) {
+    blackBlocks.push({
+        x: Math.random() * (canvas.width - blockWidth),
+        y: Math.random() * (canvas.height / 2),
+        width: blockWidth,
+        height: blockHeight
+    });
+}
+
+function getRandomColor() {
+    const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#A133FF'];
+    return colors[Math.floor(Math.random() * colors.length)];
+}
 
 function drawPlayer() {
     ctx.fillStyle = '#0095DD';
     ctx.fillRect(player.x, player.y, player.width, player.height);
 }
 
-function drawBall() {
+function drawBall(ball) {
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
     ctx.fillStyle = '#0095DD';
     ctx.fill();
     ctx.closePath();
+}
+
+function drawBlocks() {
+    for (let c = 0; c < blockColumnCount; c++) {
+        for (let r = 0; r < blockRowCount; r++) {
+            if (blocks[c][r].status == 1) {
+                const blockX = (c * (blockWidth + blockPadding)) + blockOffsetLeft;
+                const blockY = (r * (blockHeight + blockPadding)) + blockOffsetTop;
+                blocks[c][r].x = blockX;
+                blocks[c][r].y = blockY;
+                ctx.beginPath();
+                ctx.rect(blockX, blockY, blockWidth, blockHeight);
+                ctx.fillStyle = blocks[c][r].color;
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+    }
+}
+
+function drawBlackBlocks() {
+    ctx.fillStyle = 'black';
+    blackBlocks.forEach(block => {
+        ctx.fillRect(block.x, block.y, block.width, block.height);
+    });
 }
 
 function drawScore() {
@@ -69,61 +125,82 @@ function movePlayer() {
     }
 }
 
-function moveBall() {
+function moveBall(ball) {
     ball.x += ball.dx;
     ball.y += ball.dy;
 
-    // Проверка столкновения с боковыми стенами
     if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
         ball.dx *= -1;
     }
 
-    // Проверка столкновения с верхней стеной
     if (ball.y - ball.radius < 0) {
         ball.dy *= -1;
     }
 
-    // Проверка столкновения с игроком
     if (ball.y + ball.radius > player.y &&
         ball.y - ball.radius < player.y + player.height &&
         ball.x + ball.radius > player.x &&
         ball.x - ball.radius < player.x + player.width) {
 
         ball.dy *= -1;
-        ball.y = player.y - ball.radius; // Установите шарик над игроком
-        score++;
-        if (score % 5 === 0) {
-            level++;
-            ball.speed += 1;
-            ball.dx = ball.speed * (ball.dx > 0 ? 1 : -1);
-            ball.dy = ball.speed * (ball.dy > 0 ? 1 : -1);
+        ball.y = player.y - ball.radius;
+    }
+
+    if (ball.y + ball.radius > canvas.height) {
+        return false;
+    }
+
+    for (let c = 0; c < blockColumnCount; c++) {
+        for (let r = 0; r < blockRowCount; r++) {
+            const b = blocks[c][r];
+            if (b.status == 1) {
+                if (ball.x > b.x && ball.x < b.x + blockWidth && ball.y > b.y && ball.y < b.y + blockHeight) {
+                    ball.dy *= -1;
+                    b.status = 0;
+                    score++;
+                    if (score % 5 === 0) {
+                        balls.push(Object.assign({}, ball));
+                    }
+                }
+            }
         }
     }
 
-    // Проверка выхода за нижнюю границу
-    if (ball.y + ball.radius > canvas.height) {
+    blackBlocks.forEach(block => {
+        if (ball.x + ball.radius > block.x &&
+            ball.x - ball.radius < block.x + block.width &&
+            ball.y + ball.radius > block.y &&
+            ball.y - ball.radius < block.y + block.height) {
+
+            ball.dx *= -1;
+            ball.dy *= -1;
+        }
+    });
+
+    return true;
+}
+
+function update() {
+    movePlayer();
+
+    balls = balls.filter(ball => moveBall(ball));
+
+    if (balls.length === 0) {
         lives--;
         if (lives === 0) {
             alert('Game Over');
             document.location.reload();
         } else {
-            ball.x = canvas.width / 2;
-            ball.y = canvas.height / 2;
-            ball.dx = ball.speed * (Math.random() > 0.5 ? 1 : -1);
-            ball.dy = -ball.speed;
-            player.x = canvas.width / 2 - player.width / 2;
+            balls.push(Object.assign({}, ball));
         }
     }
-}
-
-function update() {
-    movePlayer();
-    moveBall();
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     drawPlayer();
-    drawBall();
+    balls.forEach(drawBall);
+    drawBlocks();
+    drawBlackBlocks();
     drawScore();
     drawLives();
     drawLevel();
