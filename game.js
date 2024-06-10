@@ -43,14 +43,37 @@ for (let c = 0; c < blockColumnCount; c++) {
     }
 }
 
-for (let i = 0; i < 5; i++) {
-    blackBlocks.push({
-        x: Math.random() * (canvas.width - blockWidth),
-        y: Math.random() * (canvas.height / 2),
-        width: blockWidth,
-        height: blockHeight
-    });
+function createBlackBlocks() {
+    for (let i = 0; i < 5; i++) {
+        let block;
+        let overlap;
+        do {
+            overlap = false;
+            block = {
+                x: Math.random() * (canvas.width - blockWidth),
+                y: Math.random() * (canvas.height / 2),
+                width: blockWidth,
+                height: blockHeight
+            };
+            for (let c = 0; c < blockColumnCount; c++) {
+                for (let r = 0; r < blockRowCount; r++) {
+                    const b = blocks[c][r];
+                    if (block.x < b.x + blockWidth &&
+                        block.x + block.width > b.x &&
+                        block.y < b.y + blockHeight &&
+                        block.y + block.height > b.y) {
+                        overlap = true;
+                        break;
+                    }
+                }
+                if (overlap) break;
+            }
+        } while (overlap);
+        blackBlocks.push(block);
+    }
 }
+
+createBlackBlocks();
 
 function getRandomColor() {
     const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#A133FF'];
@@ -144,6 +167,9 @@ function moveBall(ball) {
 
         ball.dy *= -1;
         ball.y = player.y - ball.radius;
+
+        const collidePoint = ball.x - (player.x + player.width / 2);
+        ball.dx = collidePoint * 0.15;
     }
 
     if (ball.y + ball.radius > canvas.height) {
