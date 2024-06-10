@@ -15,7 +15,7 @@ const player = {
 
 const ballTemplate = {
     x: canvas.width / 2,
-    y: canvas.height / 2,
+    y: canvas.height - 50,
     radius: 10,
     speed: 4,
     dx: 4,
@@ -186,7 +186,13 @@ function moveBall(ball) {
                     b.status = 0;
                     score++;
                     if (score % 5 === 0) {
-                        balls.push(Object.assign({}, ballTemplate));
+                        const newBall = Object.assign({}, ballTemplate, {
+                            x: canvas.width / 2,
+                            y: player.y - 30,
+                            dx: 4 * (Math.random() > 0.5 ? 1 : -1),  // случайное направление
+                            dy: -4
+                        });
+                        balls.push(newBall);
                     }
                 }
             }
