@@ -13,7 +13,7 @@ const player = {
     dx: 0
 };
 
-const ball = {
+const ballTemplate = {
     x: canvas.width / 2,
     y: canvas.height / 2,
     radius: 10,
@@ -22,7 +22,7 @@ const ball = {
     dy: -4
 };
 
-let balls = [Object.assign({}, ball)];
+let balls = [Object.assign({}, ballTemplate)];
 let score = 0;
 let lives = 3;
 let level = 1;
@@ -44,6 +44,7 @@ for (let c = 0; c < blockColumnCount; c++) {
 }
 
 function createBlackBlocks() {
+    blackBlocks.length = 0; // Очистка существующих черных блоков
     for (let i = 0; i < 5; i++) {
         let block;
         let overlap;
@@ -51,7 +52,7 @@ function createBlackBlocks() {
             overlap = false;
             block = {
                 x: Math.random() * (canvas.width - blockWidth),
-                y: Math.random() * (canvas.height / 2),
+                y: Math.random() * ((blockOffsetTop + blockRowCount * (blockHeight + blockPadding)) - blockHeight), // Черные блоки только до цветных блоков
                 width: blockWidth,
                 height: blockHeight
             };
@@ -185,7 +186,7 @@ function moveBall(ball) {
                     b.status = 0;
                     score++;
                     if (score % 5 === 0) {
-                        balls.push(Object.assign({}, ball));
+                        balls.push(Object.assign({}, ballTemplate));
                     }
                 }
             }
@@ -217,7 +218,7 @@ function update() {
             alert('Game Over');
             document.location.reload();
         } else {
-            balls.push(Object.assign({}, ball));
+            balls.push(Object.assign({}, ballTemplate));
         }
     }
 
