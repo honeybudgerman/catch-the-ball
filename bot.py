@@ -1,7 +1,7 @@
 from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, Dispatcher
 
-TOKEN = 'YOUR_BOT_TOKEN'
+TOKEN = '7355743766:AAGGRqA_g_L1SxnjXAWRZKBJoWcizUq3qOE'
 GAME_SHORT_NAME = 'catchtheball'
 
 def start(update: Update, context: CallbackContext):
@@ -11,16 +11,17 @@ def start(update: Update, context: CallbackContext):
 
 def game_callback(update: Update, context: CallbackContext):
     query = update.callback_query
+    query.answer()
     if query.data == GAME_SHORT_NAME:
-        bot = Bot(TOKEN)
+        bot = context.bot
         bot.send_game(chat_id=query.message.chat_id, game_short_name=GAME_SHORT_NAME)
 
 def main():
     updater = Updater(TOKEN, use_context=True)
-    dp = updater.dispatcher
+    dispatcher = updater.dispatcher
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CallbackQueryHandler(game_callback))
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CallbackQueryHandler(game_callback))
 
     updater.start_polling()
     updater.idle()
